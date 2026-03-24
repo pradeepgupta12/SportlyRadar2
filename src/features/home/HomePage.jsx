@@ -25,13 +25,13 @@ const toSlug = (title) =>
     .replace(/-+/g, '-');     
 
 const HeroSection = memo(() => (
-  <div className="relative text-white overflow-hidden" style={{ minHeight: '520px' }}>
+  <div className="relative text-white overflow-hidden" style={{ minHeight: '600px' }}>
     <img
       src="https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1400&q=80"
       alt="Stadium"
       className="absolute inset-0 w-full h-full object-cover"
     />
-    <div className="absolute inset-0 bg-black/60" />
+    <div className="absolute inset-0 bg-black/20" />
     <div className="relative z-10">
       <LiveTicker />
     </div>
