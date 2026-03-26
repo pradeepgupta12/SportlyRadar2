@@ -127,7 +127,7 @@ const CricketSeriesPage = lazy(() => import('@/features/cricket/pages/CricketSer
 const CricketFixturesPage = lazy(() => import('@/features/cricket/pages/CricketFixturesPage'))
 const CricketResultsPage = lazy(() => import('@/features/cricket/pages/CricketResultsPage'))
 const IPLPage = lazy(() => import('@/features/cricket/pages/IPLPage'))
-const IPLScorecardPage = lazy(() => import('@/features/cricket/pages/IPLScorecardPage'))
+const IPLScorecardPage = lazy(() => import('../features/cricket/pages/Iplscorecardpage.jsx'))
 const IPLMatchTeamsPage = lazy(() => import('@/features/cricket/pages/IPLMatchTeamsPage'))
 const PlayerCardPage = lazy(() => import('@/features/cricket/pages/PlayerCardPage'))
 const PlayerDetailPage = lazy(() => import('@/features/cricket/pages/PlayerDetailPage'))
