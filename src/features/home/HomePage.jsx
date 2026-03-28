@@ -951,7 +951,6 @@
 
 // export default HomePage
 
-
 import { memo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import SeoManager from '@/core/seo/SeoManager'
@@ -1112,8 +1111,8 @@ const PhotosSection = memo(() => {
   const latest = photos.slice(0, 4)
 
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-3">
+    <div className="mb-12 mt-4">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">Photos</h2>
         <Link to="/photogallary" className="text-sm text-[#00698c] hover:underline font-medium">
           View all
@@ -1149,8 +1148,8 @@ const VideosSection = memo(() => {
   const latest = videos.slice(0, 4)
 
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-3">
+    <div className="mb-12 mt-4">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">Videos</h2>
         <Link to="/vediogallary" className="text-sm text-[#00698c] hover:underline font-medium">
           View all
@@ -1196,7 +1195,7 @@ const VideosSection = memo(() => {
 const BlogsRow = memo(() => {
   const posts = blogPosts.slice(0, 4)
   return (
-    <div className="mb-8">
+    <div className="mb-12 mt-4">
       <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Blogs</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {posts.map((post) => (
@@ -1230,8 +1229,8 @@ const HomePage = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
 
-        {/* ── FeaturedMatch + QuickLinks sidebar — unchanged ── */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        {/* ── FeaturedMatch + QuickLinks sidebar ── */}
+        <div className="flex flex-col lg:flex-row gap-6 mb-4">
           {/* Main content */}
           <div className="flex-1 min-w-0">
             <FeaturedMatch />
@@ -1251,25 +1250,24 @@ const HomePage = () => {
             </div>
           </div>
 
-          {/* QuickLinks Sidebar — same width as before */}
+          {/* QuickLinks Sidebar */}
           <div className="lg:w-64 flex-shrink-0">
             <QuickLinks />
           </div>
         </div>
 
-        {/* ── TopHeadlines — 80% content + 20% empty right space ── */}
-        <div className="flex gap-6">
+        {/* ── TopHeadlines ── */}
+        <div className="flex gap-6 mb-4">
           <div className="w-full lg:w-[80%] min-w-0">
             <TopHeadlines />
           </div>
-          {/* Right: Empty space reserved for future sidebar — adjust w-[20%] to control width */}
           <div className="hidden lg:block lg:w-[20%]">
             {/* Sidebar content add karo yahan */}
           </div>
         </div>
 
-        {/* ── Cricket NewsGrid — 80% content + 20% empty right space ── */}
-        <div className="flex gap-6">
+        {/* ── Cricket NewsGrid ── */}
+        <div className="flex gap-6 mb-4">
           <div className="w-full lg:w-[80%] min-w-0">
             <NewsGrid
               title="Cricket News & Updates"
@@ -1278,14 +1276,13 @@ const HomePage = () => {
               basePath="/cricket/news"
             />
           </div>
-          {/* Right: Empty space reserved for future sidebar — adjust w-[20%] to control width */}
           <div className="hidden lg:block lg:w-[20%]">
             {/* Sidebar content add karo yahan */}
           </div>
         </div>
 
-        {/* ── Football NewsGrid — 80% content + 20% empty right space ── */}
-        <div className="flex gap-6">
+        {/* ── Football NewsGrid ── */}
+        <div className="flex gap-6 mb-4">
           <div className="w-full lg:w-[80%] min-w-0">
             <NewsGrid
               title="Football News & Updates"
@@ -1294,14 +1291,13 @@ const HomePage = () => {
               basePath="/football/news"
             />
           </div>
-          {/* Right: Empty space reserved for future sidebar — adjust w-[20%] to control width */}
           <div className="hidden lg:block lg:w-[20%]">
             {/* Sidebar content add karo yahan */}
           </div>
         </div>
 
-        {/* ── Other Sports NewsGrid — 80% content + 20% empty right space ── */}
-        <div className="flex gap-6">
+        {/* ── Other Sports NewsGrid ── */}
+        <div className="flex gap-6 mb-4">
           <div className="w-full lg:w-[80%] min-w-0">
             <NewsGrid
               title="Other Sports News & Updates"
@@ -1310,13 +1306,12 @@ const HomePage = () => {
               basePath="/sports/news"
             />
           </div>
-          {/* Right: Empty space reserved for future sidebar — adjust w-[20%] to control width */}
           <div className="hidden lg:block lg:w-[20%]">
             {/* Sidebar content add karo yahan */}
           </div>
         </div>
 
-        {/* ── Photos, Videos, Blogs — as is, no changes ── */}
+        {/* ── Photos, Videos, Blogs ── */}
         <PhotosSection />
         <VideosSection />
         <BlogsRow />
