@@ -7,7 +7,7 @@ const Category = () => {
 
   const sports = [
     { label: 'All', path: '/', emoji: null },
-    { label: 'Cricket', path: '/cricket', emoji: '🏏' },
+    { label: 'Cricket', path: '/cricket/ipl', emoji: '🏏' },
     { label: 'Football', path: '/football', emoji: '⚽' },
     { label: 'Badminton', path: '/badminton', emoji: '🏸' },
     { label: 'Tennis', path: '/tennis', emoji: '🎾' },

@@ -26,7 +26,7 @@ export const appConfig = {
   // Sports tabs in header ticker
   sports: [
     { id: 'all', label: 'All', emoji: null },
-    { id: 'cricket', label: 'Cricket', emoji: '🏏', path: '/cricket' },
+    { id: 'cricket', label: 'Cricket', emoji: '🏏', path: '/cricket/ipl/matches' },
     { id: 'football', label: 'Football', emoji: '⚽', path: '/football' },
     { id: 'badminton', label: 'Badminton', emoji: '🏸', path: '/badminton' },
     { id: 'tennis', label: 'Tennis', emoji: '🎾', path: '/tennis' },
@@ -35,14 +35,13 @@ export const appConfig = {
 
   // Cricket sub-tabs
   cricketTabs: [
-  //{ id: 'ipl', label: 'IPL 2026', path: '/cricket/ipl' },
-  { id: 'scores', label: 'Scores', path: '/cricket' },
+  { id: 'ipl', label: 'IPL 2026', path: '/cricket/ipl' },
+  { id: 'scores', label: 'Scores', path: '/cricket/ipl/matches' },
   { id: 'series', label: 'Series', path: '/cricket/series' },
-  { id: 'fixtures', label: 'Fixtures', path: '/cricket/fixtures' },
+  //{ id: 'fixtures', label: 'Fixtures', path: '/cricket/fixtures' },
   { id: 'results', label: 'Results', path: '/cricket/results' },
-  { id: 'players', label: 'Players', path: '/cricket/players' },
-  { id: 'teams', label: 'Teams', path: '/cricket/ipl/teams' },
-  { id: 'news', label: 'News', path: '/cricket/news' },
+ // { id: 'teams', label: 'Teams', path: '/cricket/ipl/teams' },
+  { id: 'news', label: 'News', path: '/news' },
   { id: 'photos', label: 'Photos', path: '/photogallary' },
   { id: 'video', label: 'Video', path: '/vediogallary' },
 ],

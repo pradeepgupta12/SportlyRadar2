@@ -1,154 +1,200 @@
+// pages/IPLPage.jsx
+// Legacy page — mostly superseded by IPLHomePage + IPLMatchesPage.
+// Kept for backward compatibility with existing routes.
+// Static iplScorecards data REMOVED — now uses live API.
 
-/////// ye jo neeche code lga hai scorecard ke liye hai upar jo hai usme scorekard vala nahi tha par hai dono sahi 
-
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import SportsTabs from '../../../layouts/SportsTabs'
+import SportsTabs from '@/layouts/SportsTabs'
 import CricketTabs from '../components/CricketTabs'
 import SectionHeader from '@/shared/components/SectionHeader'
 import BlogsSection from '@/shared/components/BlogsSection'
 import SeoManager from '@/core/seo/SeoManager'
+import { getAllMatchFeeds, getTeamFlag } from '../../../service/ipl.api'
 
-import { iplScorecards } from '@/shared/constants/iplScorecards'
-
-// Tab → route mapping
 const TAB_ROUTES = {
-  News:   '/cricket/news',
+  News:   '/news',
   Photos: '/photogallary',
   Video:  '/vediogallary',
 }
 
+// ── Match card (legacy style) ─────────────────────────────────────────────────
 const IPLMatchCard = ({ match }) => {
   const navigate = useNavigate()
+
+  const isClickable = match.type !== 'Upcoming'
+  const dateStr = match.startDate
+    ? new Date(match.startDate).toLocaleString('en-IN', {
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      })
+    : ''
+
   return (
     <div
-      className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 mb-3 sm:mb-4 cursor-pointer"
-      onClick={() => navigate(`/cricket/ipl/scorecard/${match.slug}/${match.series}`)}
+      className={`bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 mb-3 sm:mb-4 ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+      onClick={() => isClickable && navigate(`/cricket/ipl/scorecard/${match.matchId}`)}
     >
-      <div className="bg-gradient-to-r from-[#00698c] to-[#0088b0] text-white px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between flex-wrap gap-2">
-        <span className="text-xs sm:text-sm font-semibold">{match.date}</span>
-        <span className="text-xs sm:text-sm font-medium bg-white/20 px-2 sm:px-3 py-0.5 rounded-full">{match.matchNumber}</span>
+      {/* Status bar */}
+      <div className={`text-white px-3 sm:px-4 py-2 sm:py-2.5 flex items-center justify-between flex-wrap gap-2 ${
+        match.type === 'Live' ? 'bg-gradient-to-r from-red-700 to-red-600'
+        : match.type === 'Recent' ? 'bg-gradient-to-r from-[#00698c] to-[#0088b0]'
+        : 'bg-gradient-to-r from-gray-600 to-gray-500'
+      }`}>
+        <span className="text-xs sm:text-sm font-semibold flex items-center gap-1.5">
+          {match.type === 'Live' && <span className="w-2 h-2 bg-white rounded-full animate-pulse" />}
+          {match.type === 'Live' ? 'LIVE' : match.type === 'Recent' ? 'Result' : 'Upcoming'}
+        </span>
+        <span className="text-xs font-medium opacity-80">{match.matchDesc || ''}</span>
       </div>
+
       <div className="p-3 sm:p-4 md:p-5">
         {/* Teams */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 sm:gap-3">
-              <span
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold flex-shrink-0"
-                style={{ backgroundColor: match.teams.team1.color }}
-              >
-               {match.teams?.team1?.code}
-              </span>
-              <span className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">
-                {match.teams?.team1?.name}
-              </span>
+              <img
+                src={match.team1?.logo || getTeamFlag(match.team1?.name)}
+                alt={match.team1?.name}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
+              <div>
+                <span className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base block">
+                  {match.team1?.name || 'TBA'}
+                </span>
+                {match.team1?.score && (
+                  <span className="text-xs font-bold text-[#00698c]">{match.team1.score}</span>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex items-center justify-center sm:justify-start">
+          <div className="flex items-center justify-center">
             <span className="text-xs sm:text-sm font-bold text-gray-500 dark:text-gray-400 px-2">VS</span>
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 sm:gap-3">
-              <span
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-bold flex-shrink-0"
-                style={{ backgroundColor: match.teams.team2.color  }}
-              >
-              {match.teams?.team2?.code}
+              <img
+                src={match.team2?.logo || getTeamFlag(match.team2?.name)}
+                alt={match.team2?.name}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
+              <div>
+                <span className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base block">
+                  {match.team2?.name || 'TBA'}
+                </span>
+                {match.team2?.score && (
+                  <span className="text-xs font-bold text-[#00698c]">{match.team2.score}</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
 
+        {/* Meta */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700">
+          {match.venue && (
+            <div className="flex items-start gap-1.5">
+              <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              <span className="break-words">{match.venue}{match.city ? `, ${match.city}` : ''}</span>
+            </div>
+          )}
+          {dateStr && (
+            <div className="flex items-start gap-1.5">
+              <svg className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{dateStr}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Result / CTA */}
+        {(match.result || isClickable) && (
+          <div className="mt-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+            {match.result ? (
+              <p className="text-xs font-semibold text-[#00698c]">{match.result}</p>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs sm:text-sm text-[#00698c] font-medium">
+                View Scorecard
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeWidth="2" strokeLinecap="round" d="M9 18l6-6-6-6" />
+                </svg>
               </span>
-              <span className="font-semibold text-gray-900 dark:text-white text-sm sm:text-base truncate">
-               {match.teams?.team2?.name}
-              </span>
-            </div>
+            )}
           </div>
-        </div>
-
-        {/* Match Details */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700">
-          <div className="flex items-start gap-2">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <div>
-              <p className="font-semibold text-gray-700 dark:text-gray-300 text-xs mb-0.5">Venue</p>
-              <p className="break-words">{match.venue}</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <p className="font-semibold text-gray-700 dark:text-gray-300 text-xs mb-0.5">Match Time</p>
-              <p>{match.time}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* View Scorecard */}
-        <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-gray-100 dark:border-gray-700">
-          <span className="inline-flex items-center gap-1 text-xs sm:text-sm text-[#00698c] hover:text-[#0088b0] font-medium transition-colors">
-            View Scorecard
-            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeWidth="2" strokeLinecap="round" d="M9 18l6-6-6-6" />
-            </svg>
-          </span>
-        </div>
+        )}
       </div>
     </div>
   )
 }
 
+// ─── Main ─────────────────────────────────────────────────────────────────────
 const IPLPage = () => {
   const [activeTab, setActiveTab] = useState('Matches')
-  const [isScrolled, setIsScrolled] = useState(false)
-  const tabs = ['Home', 'Scorecard', 'Matches', 'Table', 'News', 'Photos', 'Video']
-  const navigate = useNavigate()
+  const [data, setData]           = useState({ live: [], upcoming: [], recent: [] })
+  const [loading, setLoading]     = useState(true)
+  const navigate                  = useNavigate()
+
+  const tabs = ['Home', 'Scorecard', 'Matches', 'Table']
 
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 100)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    const load = async () => {
+      try {
+        const result = await getAllMatchFeeds()
+        setData(result)
+      } catch { /* silent */ } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [])
 
   const getMatches = () => {
-    if (activeTab === 'Matches') return iplScorecards
-    if (activeTab === 'Home') return iplScorecards.slice(0, 3)
-    return []
+    const all = [
+      ...data.live.map(m => ({ ...m, type: 'Live' })),
+      ...data.upcoming.map(m => ({ ...m, type: 'Upcoming' })),
+      ...data.recent.map(m => ({ ...m, type: 'Recent' })),
+    ]
+    if (activeTab === 'Home') return all.slice(0, 3)
+    return all
   }
 
   const displayedMatches = getMatches()
 
-  const handleTabClick = (tab) => {
-    if (tab === 'Scorecard') {
-      // Navigate to first match scorecard
-      navigate(`/cricket/ipl/scorecard/${iplScorecards[0]?.slug}/${iplScorecards[0]?.series}`)
-    } else if (TAB_ROUTES[tab]) {
-      // News, Photos, Video — navigate to their pages
-      navigate(TAB_ROUTES[tab])
-    } else {
-      setActiveTab(tab)
-    }
+const handleTabClick = (tab) => {
+  if (tab === 'Scorecard') {
+    const first = [...data.live, ...data.recent][0]
+    if (first?.matchId) navigate(`/cricket/ipl/scorecard/${first.matchId}`)
+    else navigate('/cricket/ipl/scorecard')
+
+  } else if (tab === 'Matches') {
+    navigate('/cricket/ipl/matches')   // ✅ NEW
+
+  } else if (TAB_ROUTES[tab]) {
+    navigate(TAB_ROUTES[tab])
+
+  } else {
+    setActiveTab(tab)
   }
+}
 
   return (
     <>
-      <SeoManager title="IPL 2026 | SportyRadar" />
+      <SeoManager title="IPL 2025 | SportyRadar" />
       <SportsTabs />
-      <CricketTabs extraTab={{ label: 'IPL 2026', path: '/cricket/ipl' }} />
+      <CricketTabs />
 
-      {/* Main layout: IPL content + right sidebar space */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="flex gap-6">
-
-          {/* Left: IPL content — 80% width */}
           <div className="w-full lg:w-[80%] min-w-0">
-            <SectionHeader title="INDIAN PREMIER LEAGUE 2026" />
+            <SectionHeader title="INDIAN PREMIER LEAGUE 2025" />
 
-            {/* IPL Sub-tabs */}
-            <div className={`sticky top-0 z-10 bg-white dark:bg-[#1c2128] transition-shadow ${isScrolled ? 'shadow-md' : ''}`}>
+            {/* Sub-tabs */}
+            <div className="sticky top-0 z-10 bg-white dark:bg-[#1c2128]">
               <div className="flex items-center gap-0 border-b pb-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1c2128] rounded-t-lg overflow-x-auto scrollbar-hide">
                 {tabs.map((tab) => (
                   <button
@@ -160,33 +206,51 @@ const IPLPage = () => {
                         : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300'
                     }`}
                   >
+                    {tab === 'Live' && data.live.length > 0 && (
+                      <span className="inline-block w-1.5 h-1.5 bg-red-500 rounded-full mr-1 animate-pulse" />
+                    )}
                     {tab}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Tab Content */}
-            <div className="mt-4 ">
+            {/* Content */}
+            <div className="mt-4">
               {activeTab === 'Matches' || activeTab === 'Home' ? (
                 <>
-                  <div className="flex items-center justify-between mb-3 sm:mb-8">
+                  <div className="flex items-center justify-between mb-3 sm:mb-6">
                     <div className="flex items-center gap-2">
-                      <div className="w-1 h-5 sm:h-6 bg-[#00698c] rounded-full"></div>
+                      <div className="w-1 h-5 sm:h-6 bg-[#00698c] rounded-full" />
                       <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">
-                        {activeTab === 'Home' ? 'Upcoming Matches' : 'All Matches'}
+                        {activeTab === 'Home' ? 'IPL Matches' : 'All Matches'}
                       </h3>
                     </div>
                     <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                       {displayedMatches.length} Match{displayedMatches.length !== 1 ? 'es' : ''}
                     </span>
                   </div>
-                  <div className="space-y-3 sm:space-y-6">
-                    {displayedMatches.map((match) => (
-                      <IPLMatchCard key={match.id} match={match} />
-                    ))}
-                  </div>
-                  {activeTab === 'Home' && iplScorecards.length > 3 && (
+
+                  {loading ? (
+                    <div className="space-y-4">
+                      {[1,2,3].map(i => (
+                        <div key={i} className="h-36 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse" />
+                      ))}
+                    </div>
+                  ) : displayedMatches.length === 0 ? (
+                    <div className="text-center py-12 text-gray-400">
+                      <p className="text-3xl mb-3">🏏</p>
+                      <p className="text-sm">No matches available</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 sm:space-y-4">
+                      {displayedMatches.map((match) => (
+                        <IPLMatchCard key={match.matchId} match={match} />
+                      ))}
+                    </div>
+                  )}
+
+                  {activeTab === 'Home' && (data.live.length + data.recent.length + data.upcoming.length) > 3 && (
                     <div className="text-center mt-4 sm:mt-6">
                       <button
                         onClick={() => setActiveTab('Matches')}
@@ -209,22 +273,16 @@ const IPLPage = () => {
                     {activeTab} Coming Soon
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                    We're working on bringing you the latest {activeTab.toLowerCase()} for IPL 2026.
+                    We're working on bringing you the latest {activeTab.toLowerCase()} for IPL 2025.
                   </p>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Right: Empty space reserved for future sidebar — adjust w-[20%] to control width */}
-          <div className="hidden lg:block lg:w-[20%]">
-            {/* Sidebar content add karo yahan */}
-          </div>
-
+          <div className="hidden lg:block lg:w-[20%]">{/* sidebar */}</div>
         </div>
       </div>
 
-      {/* BlogsSection: separate full-width container — same width as other IPL pages */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <BlogsSection />
       </div>

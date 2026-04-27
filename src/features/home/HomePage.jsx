@@ -744,7 +744,7 @@
 
 
 
-import { memo } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import SeoManager from '@/core/seo/SeoManager'
 import { seoConfig } from '@/config/seo.config'
@@ -757,8 +757,79 @@ import { cricketNewsData } from '@/shared/constants/cricketNews.data'
 import { footballNewsData } from '@/shared/constants/footballNews.data'
 import { otherSportsNewsData } from '@/shared/constants/otherSportsNews.data'
 import NewsGrid from '../../features/home/sections/NewsGrid'
-import TopHeadlines from '../../features/home/sections/TopHeadlines.jsx'
 import HeroSection from '../../features/home/sections/HeroSection.jsx'
+import BlogsRow from '@/shared/components/BlogsRow.jsx'
+
+
+// HomePage.jsx mein — TopHeadlines import hata do, ye add karo:
+
+import { getCricketNews, getIPLNews } from '../../service/sports.service.js' // path adjust karo
+
+const LatestNewsSection = memo(() => {
+  const [news, setNews] = useState([])
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const [c, i] = await Promise.all([getCricketNews(), getIPLNews()])
+        const cricket = c.success
+          ? c.data.map((item, idx) => ({
+              id: `${idx}-c`,
+              title: item.title,
+              source: item.source,
+              time: new Date(item.publishedAt).toLocaleDateString(),
+              slug: `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${idx}`,
+              image: item.image,
+              description: item.description,
+              category: 'Cricket',
+            }))
+          : []
+        const ipl = i.success
+          ? i.data.map((item, idx) => ({
+              id: `${idx}-i`,
+              title: item.title,
+              source: item.source,
+              time: new Date(item.publishedAt).toLocaleDateString(),
+              slug: `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${idx}`,
+              image: item.image,
+              description: item.description,
+              category: 'IPL',
+            }))
+          : []
+        setNews([...cricket, ...ipl].slice(0, 9))
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    fetchLatest()
+  }, [])
+
+  if (!news.length) return null
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-4">Latest News</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        {news.map((item) => (
+          <Link
+            key={item.id}
+            to={`/cricket/news/${item.slug}`}
+            state={{ article: item }}
+            className="flex items-start gap-2.5 cursor-pointer group"
+          >
+            <div className="w-2 h-2 rounded-full bg-[#00698c] mt-1.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-[#00698c] transition-colors leading-snug line-clamp-2">
+                {item.title}
+              </p>
+              <span className="text-xs font-medium text-gray-400 dark:text-gray-500">{item.time}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+})
 
 const toSlug = (title) =>
   title
@@ -772,7 +843,7 @@ const FeaturedMatch = memo(() => {
   const navigate = useNavigate()
 
   const handleClick = () => {
-    navigate('/cricket')
+    navigate('/cricket/ipl')
   }
 
   return (
@@ -939,25 +1010,51 @@ const VideosSection = memo(() => {
   )
 })
 
-const BlogsRow = memo(() => {
-  // CHANGED: 4 → 3
-  const posts = blogPosts.slice(0, 3)
-  return (
-    <div className="mb-12 mt-4">
-      {/* CHANGED: text-lg font-bold → text-2xl font-extrabold */}
-      <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-4">Blogs</h2>
-      {/* CHANGED: lg:grid-cols-4 → lg:grid-cols-3 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {posts.map((post) => (
-          <BlogCard key={post.id} post={post} compact />
-        ))}
-      </div>
-    </div>
-  )
-})
 
 const HomePage = () => {
   const navigate = useNavigate()
+   const [cricketNews, setCricketNews] = useState([])   // ← ADD
+  const [iplNews, setIplNews] = useState([])    
+          // ← ADD
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const [c, i] = await Promise.all([getCricketNews(), getIPLNews()])
+        if (c.success) {
+          setCricketNews(
+            c.data.map((item, idx) => ({
+              id:          `${idx}-c`,
+              title:       item.title,
+              description: item.description,
+              image:       item.image,
+              source:      item.source,
+              time:        new Date(item.publishedAt).toLocaleDateString(),
+              slug:        `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${idx}`,
+              category:    'Cricket',
+            }))
+          )
+        }
+        if (i.success) {
+          setIplNews(
+            i.data.map((item, idx) => ({
+              id:          `${idx}-i`,
+              title:       item.title,
+              description: item.description,
+              image:       item.image,
+              source:      item.source,
+              time:        new Date(item.publishedAt).toLocaleDateString(),
+              slug:        `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${idx}`,
+              category:    'IPL',
+            }))
+          )
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    fetchAll()
+  }, [])
+
 
   const faCupArticle = footballNewsData.find(article => article.id === 'fn-8')
 
@@ -1007,7 +1104,7 @@ const HomePage = () => {
         {/* ── TopHeadlines ── */}
         <div className="flex gap-6 mb-4">
           <div className="w-full lg:w-[80%] min-w-0">
-            <TopHeadlines />
+            <LatestNewsSection />
           </div>
           <div className="hidden lg:block lg:w-[20%]" />
         </div>
@@ -1017,8 +1114,8 @@ const HomePage = () => {
           <div className="w-full lg:w-[80%] min-w-0">
             <NewsGrid
               title="Cricket News & Updates"
-              viewAllTo="/cricket/news"
-              items={cricketNewsData}
+              viewAllTo="/news"
+              items={cricketNews}        
               basePath="/cricket/news"
             />
           </div>

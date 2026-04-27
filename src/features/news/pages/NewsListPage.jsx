@@ -4,9 +4,8 @@
 
 import { memo, useMemo } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { cricketNewsData } from '@/shared/constants/cricketNews.data'
-import { footballNewsData } from '@/shared/constants/footballNews.data'
-import { otherSportsNewsData } from '@/shared/constants/otherSportsNews.data'
+import { useEffect, useState } from 'react'
+import { getCricketNews, getIPLNews } from '../../../service/sports.service.js'
 import { headlinesData } from '@/shared/constants/headlines.data'
 
 // ── Map pathname → data & meta ─────────────────────────────────────────────
@@ -14,30 +13,27 @@ import { headlinesData } from '@/shared/constants/headlines.data'
 const CONFIG = {
   '/cricket/news': {
     label: 'Cricket',
-    data: cricketNewsData,
+    type: 'cricket',
     basePath: '/cricket/news',
-    accent: '#00698c',
     emoji: '🏏',
   },
-  '/football/news': {
-    label: 'Football',
-    data: footballNewsData,
-    basePath: '/football/news',
-    accent: '#00698c',
-    emoji: '⚽',
+  '/ipl/news': { // ✅ NEW
+    label: 'IPL',
+    type: 'ipl',
+    basePath: '/ipl/news',
+    emoji: '🔥',
   },
   '/sports/news': {
     label: 'Other Sports',
-    data: otherSportsNewsData,
+    type: 'other',
     basePath: '/sports/news',
-    accent: '#00698c',
     emoji: '🏆',
   },
   '/headlines': {
     label: 'Top Headlines',
+    type: 'headlines',
     data: headlinesData,
     basePath: '/headlines',
-    accent: '#00698c',
     emoji: '📰',
   },
 }
@@ -121,6 +117,8 @@ const HeadlineCard = memo(({ item }) => (
 // ── Main Page ──────────────────────────────────────────────────────────────
 
 const NewsListPage = () => {
+  const [news, setNews] = useState([])
+const [loading, setLoading] = useState(true)
   const { pathname } = useLocation()
 
   // Resolve config based on current path
@@ -132,16 +130,84 @@ const NewsListPage = () => {
     return key ? CONFIG[key] : null
   }, [pathname])
 
-  if (!config) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
-        <p className="text-gray-500 dark:text-gray-400">Section not found.</p>
-        <Link to="/" className="text-[#00698c] hover:underline mt-2 inline-block text-sm">Go Home</Link>
-      </div>
-    )
+ if (!config) {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
+      <p className="text-gray-500 dark:text-gray-400">Section not found.</p>
+      <Link to="/" className="text-[#00698c] hover:underline mt-2 inline-block text-sm">
+        Go Home
+      </Link>
+    </div>
+  )
+}
+
+const isHeadlines = config.basePath === '/headlines'
+ 
+
+
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+  setLoading(true)
+  setNews([]) // ✅ ADD THIS
+
+  let res
+
+      if (config === 'cricket') {
+        res = await getCricketNews()
+      } else if (config === 'ipl') {
+        res = await getIPLNews()
+      }
+
+      if (res?.success) {
+        const formatted = res.data.map((item, index) => ({
+          id: `${config.type}-${index}`, // ✅ better unique id
+          title: item.title,
+          description: item.description,
+          image: item.image,
+          source: item.source,
+          time: new Date(item.publishedAt).toLocaleDateString(),
+          slug: `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${index}`,
+          category: config.label,
+        }))
+
+        setNews(formatted)
+      } else {
+        setNews([])
+      }
+
+    } catch (err) {
+      console.error(err)
+      setNews([])
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const isHeadlines = config.basePath === '/headlines'
+  if (config === 'headlines') {
+    setLoading(false)
+    return
+  }
+
+  if (config) {
+    fetchData()
+  }
+
+}, [config]) // ✅ FIXED dependency
+
+const dataToRender = config.type === 'headlines' ? config.data : news
+
+
+  
+
+
+if (loading) {
+  return (
+    <div className="text-center py-20 text-gray-400">
+      Loading news...
+    </div>
+  )
+}
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -162,20 +228,20 @@ const NewsListPage = () => {
           {isHeadlines ? 'Top Headlines' : `${config.label} News & Updates`}
         </h1>
         <span className="ml-auto text-sm text-gray-400 dark:text-gray-500">
-          {config.data.length} articles
+          {dataToRender.length} articles
         </span>
       </div>
 
       {/* Grid */}
       {isHeadlines ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {config.data.map((item) => (
+          {dataToRender.map((item) => (
             <HeadlineCard key={item.id} item={item} />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {config.data.map((item) => (
+          {dataToRender.map((item) => (
             <NewsCard key={item.id} item={item} basePath={config.basePath} />
           ))}
         </div>

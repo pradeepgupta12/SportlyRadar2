@@ -1,448 +1,797 @@
+// // pages/IPLScorecardPage.jsx
+// import { useState, useEffect, useCallback, useRef } from 'react'
+// import { useParams, useNavigate } from 'react-router-dom'
+// import SportsTabs from '@/layouts/SportsTabs'
+// import CricketTabs from '../components/CricketTabs'
+// import BlogsSection from '@/shared/components/BlogsSection'
+// import SeoManager from '@/core/seo/SeoManager'
+// import {
+//   IPLBanner, IPLSubTabs, SkeletonList, EmptyState,
+// } from '../components/iplshared'
+// import { getScorecard, getMatchInfo, getAllMatches } from '../../../service/ipl.api'
+
+// // ─── Fall of Wickets ──────────────────────────────────────────────────────────
+// const FallOfWickets = ({ wickets }) => {
+//   if (!wickets?.length) return null
+//   return (
+//     <div className="mt-3 px-3 sm:px-4 py-2 border-t border-gray-100 dark:border-gray-700">
+//       <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Fall of Wickets</p>
+//       <p className="text-xs text-gray-600 dark:text-gray-300">
+//         {wickets.map((w, i) => (
+//           <span key={i}>
+//             {w.batName} {w.wktRuns}/{w.wktNbr} ({w.wktOvr}){i < wickets.length - 1 ? ', ' : ''}
+//           </span>
+//         ))}
+//       </p>
+//     </div>
+//   )
+// }
+
+// // ─── Batting Table ────────────────────────────────────────────────────────────
+// const BattingTable = ({ innings }) => {
+//   if (!innings) return null
+//   const { batters = [], bowlers = [], extras, score, wickets, overs, wicketsFall = [] } = innings
+
+//   return (
+//     <div className="mb-6">
+//       {/* Innings score header */}
+//       <div className="flex items-center justify-between bg-[#00698c]/10 dark:bg-[#00698c]/20 px-3 sm:px-4 py-2 border border-gray-200 dark:border-gray-700 mb-0.5">
+//         <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
+//           {innings.teamName}
+//         </span>
+//         <span className="text-sm font-black text-gray-900 dark:text-white">
+//           {score}/{wickets} <span className="font-normal text-gray-500 text-xs">({overs} Ov)</span>
+//         </span>
+//       </div>
+
+//       {/* Batting header */}
+//       <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 border-t-0">
+//         <div className="grid px-3 sm:px-4 py-2" style={{ gridTemplateColumns: '1fr 36px 36px 36px 36px 52px' }}>
+//           <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Batting</span>
+//           {['R','B','4s','6s','SR'].map(h => (
+//             <span key={h} className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">{h}</span>
+//           ))}
+//         </div>
+//       </div>
+
+//       {/* Batter rows */}
+//       <div className="border border-gray-200 dark:border-gray-700 border-t-0">
+//         {batters.length === 0 ? (
+//           <div className="px-4 py-3 text-xs text-gray-400 text-center">No batting data</div>
+//         ) : batters.map((p, idx) => (
+//           <div
+//             key={p.id || idx}
+//             className={`grid px-3 sm:px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${
+//               idx % 2 === 0 ? 'bg-white dark:bg-[#1c2128]' : 'bg-gray-50/40 dark:bg-[#161b22]'
+//             }`}
+//             style={{ gridTemplateColumns: '1fr 36px 36px 36px 36px 52px' }}
+//           >
+//             <div className="min-w-0 pr-2">
+//               <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">{p.name}</p>
+//               {p.dismissal === 'not out'
+//                 ? <p className="text-xs text-green-500 mt-0.5">not out</p>
+//                 : p.dismissal
+//                   ? <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{p.dismissal}</p>
+//                   : null
+//               }
+//             </div>
+//             <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white text-center self-center">{p.runs}</span>
+//             <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{p.balls}</span>
+//             <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{p.fours}</span>
+//             <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{p.sixes}</span>
+//             <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-right self-center">
+//               {p.strikeRate ? Number(p.strikeRate).toFixed(2) : '0.00'}
+//             </span>
+//           </div>
+//         ))}
+
+//         {/* Extras */}
+//         {extras !== undefined && (
+//           <div className="flex justify-between px-3 sm:px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-[#1c2128]">
+//             <span className="text-xs text-gray-500">Extras</span>
+//             <span className="text-xs text-gray-600 dark:text-gray-400">{extras}</span>
+//           </div>
+//         )}
+
+//         {/* Total */}
+//         <div className="flex justify-between px-3 sm:px-4 py-2.5 bg-gray-50 dark:bg-[#161b22] font-semibold">
+//           <span className="text-xs sm:text-sm text-gray-900 dark:text-white">Total</span>
+//           <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+//             {score}/{wickets} ({overs} Ov)
+//           </span>
+//         </div>
+//       </div>
+
+//       {/* Fall of wickets */}
+//       {wicketsFall.length > 0 && <FallOfWickets wickets={wicketsFall} />}
+
+//       {/* Bowling */}
+//       {bowlers?.length > 0 && <BowlingTable bowlers={bowlers} />}
+//     </div>
+//   )
+// }
+
+// // ─── Bowling Table ────────────────────────────────────────────────────────────
+// const BowlingTable = ({ bowlers }) => (
+//   <div className="mt-4">
+//     <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-lg">
+//       <div className="grid px-3 sm:px-4 py-2" style={{ gridTemplateColumns: '1fr 40px 36px 36px 40px 52px' }}>
+//         <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Bowler</span>
+//         {['O','M','R','W','ECO'].map(h => (
+//           <span key={h} className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">{h}</span>
+//         ))}
+//       </div>
+//     </div>
+//     <div className="border border-gray-200 dark:border-gray-700 border-t-0 rounded-b-lg">
+//       {bowlers.map((b, idx) => (
+//         <div
+//           key={b.id || idx}
+//           className={`grid px-3 sm:px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${
+//             idx % 2 === 0 ? 'bg-white dark:bg-[#1c2128]' : 'bg-gray-50/40 dark:bg-[#161b22]'
+//           }`}
+//           style={{ gridTemplateColumns: '1fr 40px 36px 36px 40px 52px' }}
+//         >
+//           <span className="text-xs sm:text-sm text-gray-900 dark:text-white truncate pr-2 self-center">{b.name}</span>
+//           <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{b.overs}</span>
+//           <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{b.maidens}</span>
+//           <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{b.runs}</span>
+//           <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white text-center self-center">{b.wickets}</span>
+//           <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-right self-center">
+//             {b.economy ? Number(b.economy).toFixed(2) : '0.00'}
+//           </span>
+//         </div>
+//       ))}
+//     </div>
+//   </div>
+// )
+
+// // ─── Match Selector ───────────────────────────────────────────────────────────
+// const MatchSelector = ({ matches, selectedId, onSelect }) => {
+//   if (!matches?.length) return null
+
+//   // Group by status for better UX
+//   const live     = matches.filter(m => m.type === 'Live')
+//   const recent   = matches.filter(m => m.type === 'Recent')
+//   const upcoming = matches.filter(m => m.type === 'Upcoming')
+//   const ordered  = [...live, ...recent, ...upcoming]
+
+//   return (
+//     <div className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-4">
+//       <div className="px-3 sm:px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+//         <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Select Match</span>
+//         <span className="text-[10px] text-gray-400">{matches.length} matches</span>
+//       </div>
+//       <div className="overflow-x-auto scrollbar-hide">
+//         <div className="flex min-w-max">
+//           {ordered.map((m) => {
+//             const t1 = m?.team1?.shortName || 'T1'
+//             const t2 = m?.team2?.shortName || 'T2'
+//             const isSelected = String(selectedId) === String(m.matchId)
+//             const isLive = m.type === 'Live'
+//             return (
+//               <button
+//                 key={m.matchId}
+//                 onClick={() => m.type !== 'Upcoming' && onSelect(m.matchId)}
+//                 disabled={m.type === 'Upcoming'}
+//                 className={`flex-shrink-0 px-3 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap flex flex-col items-center gap-0.5 ${
+//                   isSelected
+//                     ? 'border-[#00698c] text-[#00698c] bg-[#00698c]/5'
+//                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed'
+//                 }`}
+//               >
+//                 <span className="flex items-center gap-1">
+//                   {isLive && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+//                   <span className="font-bold">{t1}</span>
+//                   <span className="text-gray-400 text-[10px]">vs</span>
+//                   <span className="font-bold">{t2}</span>
+//                 </span>
+//                 <span className={`text-[10px] ${
+//                   isLive ? 'text-red-400' : m.type === 'Recent' ? 'text-emerald-500' : 'text-gray-400'
+//                 }`}>
+//                   {m.matchDesc || m.type}
+//                 </span>
+//               </button>
+//             )
+//           })}
+//         </div>
+//       </div>
+//     </div>
+//   )
+// }
+
+// // ─── Live refresh indicator ───────────────────────────────────────────────────
+// const LiveBadge = ({ isLive, lastUpdated }) => {
+//   if (!isLive) return null
+//   return (
+//     <div className="flex items-center gap-1.5 text-xs text-red-400 font-bold">
+//       <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+//       LIVE
+//       {lastUpdated && (
+//         <span className="text-gray-400 font-normal ml-1">
+//           · Updated {lastUpdated.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+//         </span>
+//       )}
+//     </div>
+//   )
+// }
+
+// // ─── Main Page ────────────────────────────────────────────────────────────────
+// const IPLScorecardPage = () => {
+//   const { matchId } = useParams()
+//   const navigate    = useNavigate()
+
+//   const [scorecard,     setScorecard]     = useState(null)
+//   const [matchInfo,     setMatchInfo]     = useState(null)
+//   const [allMatches,    setAllMatches]    = useState([])
+//   const [activeInnings, setActiveInnings] = useState(0)
+//   const [loading,       setLoading]       = useState(true)
+//   const [lastUpdated,   setLastUpdated]   = useState(null)
+//   const pollTimer = useRef(null)
+
+//   const isLive = matchInfo?.type === 'Live' || matchInfo?.state === 'In Progress'
+
+//   // ── Load match data ────────────────────────────────────────────────────────
+//   const loadMatch = useCallback(async (id) => {
+//     if (!id) return
+//     try {
+//       const [sc, info, matches] = await Promise.allSettled([
+//         getScorecard(id),
+//         getMatchInfo(id),
+//         getAllMatches(),
+//       ])
+//       if (sc.status    === 'fulfilled') setScorecard(sc.value)
+//       if (info.status  === 'fulfilled') setMatchInfo(info.value)
+//       if (matches.status === 'fulfilled') setAllMatches(matches.value || [])
+//       setLastUpdated(new Date())
+//     } catch { /* silent */ } finally {
+//       setLoading(false)
+//     }
+//   }, [])
+
+//   // ── Initial load ───────────────────────────────────────────────────────────
+//   useEffect(() => {
+//     setLoading(true)
+//     setScorecard(null)
+//     setMatchInfo(null)
+//     setActiveInnings(0)
+//     loadMatch(matchId)
+//   }, [matchId, loadMatch])
+
+//   // ── Live polling: refresh scorecard every 2 min if match is live ──────────
+//   useEffect(() => {
+//     clearInterval(pollTimer.current)
+//     if (isLive && matchId) {
+//       pollTimer.current = setInterval(() => loadMatch(matchId), 2 * 60 * 1000)
+//     }
+//     return () => clearInterval(pollTimer.current)
+//   }, [isLive, matchId, loadMatch])
+
+//   const innings = scorecard?.innings || []
+//   const inning  = innings[activeInnings]
+//   const t1Name  = matchInfo?.team1?.name || innings[0]?.teamName || 'Team 1'
+//   const t2Name  = matchInfo?.team2?.name || innings[1]?.teamName || 'Team 2'
+//   const pageTitle = matchInfo
+//     ? `${matchInfo.team1?.shortName || t1Name} vs ${matchInfo.team2?.shortName || t2Name} Scorecard | IPL 2025`
+//     : 'Scorecard | IPL 2025 | SportyRadar'
+
+//   return (
+//     <>
+//       <SeoManager title={pageTitle} />
+//       <SportsTabs />
+//       <CricketTabs extraTab={{ label: 'IPL 2025', path: '/cricket/ipl' }} />
+
+//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+//         <div className="flex gap-6">
+//           <div className="w-full lg:w-[80%] min-w-0">
+
+//             <IPLBanner />
+//             <IPLSubTabs active="Scorecard" />
+
+//             <div className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 border-t-0 rounded-b-lg">
+
+//               {/* Match title bar */}
+//               {matchInfo && (
+//                 <div className="bg-[#004d66] dark:bg-[#003344] text-white px-3 sm:px-4 py-2.5 flex items-center justify-between">
+//                   <p className="text-xs sm:text-sm font-medium">
+//                     {t1Name} vs {t2Name}
+//                     {matchInfo.matchDesc ? `, ${matchInfo.matchDesc}` : ', IPL 2025'}
+//                   </p>
+//                   <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
+//                 </div>
+//               )}
+
+//               {/* Match meta */}
+//               {matchInfo && (
+//                 <div className="px-3 sm:px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+//                   <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+//                     {matchInfo.venue && <>
+//                       <span className="text-xs font-semibold text-gray-400">Venue</span>
+//                       <span className="text-xs text-gray-800 dark:text-gray-200">{matchInfo.venue}</span>
+//                     </>}
+//                     {matchInfo.city && <>
+//                       <span className="text-xs font-semibold text-gray-400">City</span>
+//                       <span className="text-xs text-gray-800 dark:text-gray-200">{matchInfo.city}</span>
+//                     </>}
+//                     {scorecard?.toss && <>
+//                       <span className="text-xs font-semibold text-gray-400">Toss</span>
+//                       <span className="text-xs text-gray-800 dark:text-gray-200">{scorecard.toss}</span>
+//                     </>}
+//                     {matchInfo.result && <>
+//                       <span className="text-xs font-semibold text-gray-400">Result</span>
+//                       <span className="text-xs font-bold text-[#00698c]">{matchInfo.result}</span>
+//                     </>}
+//                     {scorecard?.playerOfMatch?.name && <>
+//                       <span className="text-xs font-semibold text-gray-400">Player of Match</span>
+//                       <span className="text-xs font-bold text-gray-900 dark:text-white">
+//                         ⭐ {scorecard.playerOfMatch.name}
+//                       </span>
+//                     </>}
+//                   </div>
+//                 </div>
+//               )}
+
+//               <div className="p-3 sm:p-4">
+//                 {/* Match selector */}
+//                 <MatchSelector
+//                   matches={allMatches}
+//                   selectedId={matchId}
+//                   onSelect={(id) => navigate(`/cricket/ipl/scorecard/${id}`)}
+//                 />
+
+//                 {loading ? (
+//                   <SkeletonList count={6} />
+//                 ) : !scorecard ? (
+//                   <EmptyState
+//                     message={isLive
+//                       ? "Scorecard loading... match is live, retry in 2 minutes"
+//                       : "Scorecard not available yet"
+//                     }
+//                     icon="📋"
+//                   />
+//                 ) : innings.length === 0 ? (
+//                   <EmptyState message="No innings data found" icon="🏏" />
+//                 ) : (
+//                   <>
+//                     {/* Innings tabs */}
+//                     <div className="flex border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-4">
+//                       {innings.map((inn, idx) => (
+//                         <button
+//                           key={idx}
+//                           onClick={() => setActiveInnings(idx)}
+//                           className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold transition-colors ${
+//                             idx > 0 ? 'border-l border-gray-200 dark:border-gray-700' : ''
+//                           } ${
+//                             activeInnings === idx
+//                               ? 'bg-[#00698c] text-white'
+//                               : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+//                           }`}
+//                         >
+//                           <span className="hidden sm:inline">{inn.teamName || (idx === 0 ? t1Name : t2Name)} — </span>
+//                           <span>{inn.score}/{inn.wickets}</span>
+//                           <span className="hidden sm:inline text-[10px] opacity-70 ml-1">({inn.overs} ov)</span>
+//                         </button>
+//                       ))}
+//                     </div>
+
+//                     {/* Scorecard content */}
+//                     {inning && <BattingTable innings={inning} />}
+//                   </>
+//                 )}
+//               </div>
+//             </div>
+
+//           </div>
+//           <div className="hidden lg:block lg:w-[20%]">{/* sidebar */}</div>
+//         </div>
+//       </div>
+
+//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+//         <BlogsSection />
+//       </div>
+//     </>
+//   )
+// }
+
+// export default IPLScorecardPage
 
 
-import { useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+
+// pages/IPLScorecardPage.jsx
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import SportsTabs from '@/layouts/SportsTabs'
 import CricketTabs from '../components/CricketTabs'
 import BlogsSection from '@/shared/components/BlogsSection'
 import SeoManager from '@/core/seo/SeoManager'
-import { iplScorecards } from '@/shared/constants/iplScorecards'
+import {
+  IPLBanner, IPLSubTabs, SkeletonList, EmptyState,
+} from '../components/iplshared'
+import { getScorecard, getMatchInfo, getAllMatches } from '../../../service/ipl.api'
+
+// ─── Fall of Wickets ──────────────────────────────────────────────────────────
+const FallOfWickets = ({ wickets }) => {
+  if (!wickets?.length) return null
+  return (
+    <div className="mt-3 px-3 sm:px-4 py-2 border-t border-gray-100 dark:border-gray-700">
+      <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Fall of Wickets</p>
+      <p className="text-xs text-gray-600 dark:text-gray-300">
+        {wickets.map((w, i) => (
+          <span key={i}>
+            {w.batName} {w.wktRuns}/{w.wktNbr} ({w.wktOvr}){i < wickets.length - 1 ? ', ' : ''}
+          </span>
+        ))}
+      </p>
+    </div>
+  )
+}
 
 // ─── Batting Table ────────────────────────────────────────────────────────────
-const BattingTable = ({ innings, teamName }) => {
+const BattingTable = ({ innings }) => {
   if (!innings) return null
-  const {
-    batting = [],
-    extras,
-    total,
-    didNotBat = [],
-    fallOfWickets = [],
-    powerplays = [],
-    partnerships = [],
-  } = innings
+  const { batters = [], bowlers = [], extras, score, wickets, overs, wicketsFall = [] } = innings
 
   return (
     <div className="mb-6">
-      {/* Team header 
-      <div className="flex items-center justify-between bg-[#00698c] dark:bg-[#005570] text-white px-3 sm:px-4 py-2.5 rounded-t-lg">
-        <span className="text-sm sm:text-base font-bold">{teamName}</span>
-        <span className="text-sm sm:text-base font-bold">
-          {total} ({innings.overs} Ov)
+      {/* Innings score header */}
+      <div className="flex items-center justify-between bg-[#00698c]/10 dark:bg-[#00698c]/20 px-3 sm:px-4 py-2 border border-gray-200 dark:border-gray-700 mb-0.5">
+        <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
+          {innings.teamName}
         </span>
-      </div>*/}
+        <span className="text-sm font-black text-gray-900 dark:text-white">
+          {score}/{wickets} <span className="font-normal text-gray-500 text-xs">({overs} Ov)</span>
+        </span>
+      </div>
 
       {/* Batting header */}
       <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 border-t-0">
         <div className="grid px-3 sm:px-4 py-2" style={{ gridTemplateColumns: '1fr 36px 36px 36px 36px 52px' }}>
-          <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Batting</span>
+          <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Batting</span>
           {['R','B','4s','6s','SR'].map(h => (
-            <span key={h} className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center">{h}</span>
+            <span key={h} className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">{h}</span>
           ))}
         </div>
       </div>
 
-      {/* Batting rows */}
+      {/* Batter rows */}
       <div className="border border-gray-200 dark:border-gray-700 border-t-0">
-        {batting.map((player, idx) => (
+        {batters.length === 0 ? (
+          <div className="px-4 py-3 text-xs text-gray-400 text-center">No batting data</div>
+        ) : batters.map((p, idx) => (
           <div
-            key={player.playerId || idx}
+            key={p.id || idx}
             className={`grid px-3 sm:px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${
               idx % 2 === 0 ? 'bg-white dark:bg-[#1c2128]' : 'bg-gray-50/40 dark:bg-[#161b22]'
             }`}
             style={{ gridTemplateColumns: '1fr 36px 36px 36px 36px 52px' }}
           >
             <div className="min-w-0 pr-2">
-              <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{player.name}</p>
-              {player.dismissal === 'not out' ? (
-                <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">not out</p>
-              ) : player.dismissal ? (
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-300 mt-0.5 line-clamp-1">{player.dismissal}</p>
-              ) : null}
+              <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">{p.name}</p>
+              {p.dismissal === 'not out'
+                ? <p className="text-xs text-green-500 mt-0.5">not out</p>
+                : p.dismissal
+                  ? <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{p.dismissal}</p>
+                  : null
+              }
             </div>
-            <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white text-center self-center">{player.runs}</span>
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{player.balls}</span>
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{player.fours}</span>
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{player.sixes}</span>
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-right self-center">{Number(player.strikeRate).toFixed(2)}</span>
+            <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white text-center self-center">{p.runs}</span>
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{p.balls}</span>
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{p.fours}</span>
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{p.sixes}</span>
+            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-right self-center">
+              {p.strikeRate ? Number(p.strikeRate).toFixed(2) : '0.00'}
+            </span>
           </div>
         ))}
 
         {/* Extras */}
-        {extras && (
-          <div className="flex items-start justify-between px-3 sm:px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-[#1c2128]">
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex-shrink-0 mr-4">Extra</span>
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-right">
-              {extras.total} (b {extras.byes}, lb {extras.legByes}, w {extras.wides}, nb {extras.noBalls}, p {extras.penalty})
-            </span>
+        {extras !== undefined && (
+          <div className="flex justify-between px-3 sm:px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-[#1c2128]">
+            <span className="text-xs text-gray-500">Extras</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">{extras}</span>
           </div>
         )}
 
         {/* Total */}
-        <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-[#1c2128]">
-          <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Total</span>
-          <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-            {total} ({innings.overs} Overs, RR: {innings.runRate})
+        <div className="flex justify-between px-3 sm:px-4 py-2.5 bg-gray-50 dark:bg-[#161b22] font-semibold">
+          <span className="text-xs sm:text-sm text-gray-900 dark:text-white">Total</span>
+          <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-200">
+            {score}/{wickets} ({overs} Ov)
           </span>
         </div>
-
-        {/* Did not bat */}
-        {didNotBat.length > 0 && (
-          <div className="flex items-start gap-3 px-3 sm:px-4 py-2.5 bg-white dark:bg-[#1c2128]">
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex-shrink-0">Did not Bat</span>
-            <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{didNotBat.join(', ')}</span>
-          </div>
-        )}
       </div>
 
+      {/* Fall of wickets */}
+      {wicketsFall.length > 0 && <FallOfWickets wickets={wicketsFall} />}
+
       {/* Bowling */}
-      {innings.bowling?.length > 0 && <BowlingTable bowling={innings.bowling} />}
-
-      {/* Fall of Wickets */}
-      {fallOfWickets.length > 0 && <FallOfWicketsTable fow={fallOfWickets} />}
-
-      {/* Powerplays */}
-      {powerplays.length > 0 && <PowerplaysTable powerplays={powerplays} />}
-
-      {/* Partnerships */}
-      {partnerships.length > 0 && <PartnershipsTable partnerships={partnerships} batting={batting} />}
+      {bowlers?.length > 0 && <BowlingTable bowlers={bowlers} />}
     </div>
   )
 }
 
 // ─── Bowling Table ────────────────────────────────────────────────────────────
-const BowlingTable = ({ bowling }) => (
+const BowlingTable = ({ bowlers }) => (
   <div className="mt-4">
     <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-lg">
-      <div className="grid px-3 sm:px-4 py-2" style={{ gridTemplateColumns: '1fr 36px 36px 36px 36px 36px 52px' }}>
-        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Bowler</span>
-        {['O','M','R','W','NB','ECO'].map(h => (
-          <span key={h} className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center">{h}</span>
+      <div className="grid px-3 sm:px-4 py-2" style={{ gridTemplateColumns: '1fr 40px 36px 36px 40px 52px' }}>
+        <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Bowler</span>
+        {['O','M','R','W','ECO'].map(h => (
+          <span key={h} className="text-xs font-bold text-gray-600 dark:text-gray-300 text-center">{h}</span>
         ))}
       </div>
     </div>
     <div className="border border-gray-200 dark:border-gray-700 border-t-0 rounded-b-lg">
-      {bowling.map((b, idx) => (
+      {bowlers.map((b, idx) => (
         <div
-          key={idx}
+          key={b.id || idx}
           className={`grid px-3 sm:px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${
             idx % 2 === 0 ? 'bg-white dark:bg-[#1c2128]' : 'bg-gray-50/40 dark:bg-[#161b22]'
           }`}
-          style={{ gridTemplateColumns: '1fr 36px 36px 36px 36px 36px 52px' }}
+          style={{ gridTemplateColumns: '1fr 40px 36px 36px 40px 52px' }}
         >
-          <span className="text-xs sm:text-sm text-gray-900 dark:text-white truncate pr-2 self-center">{b.playerName}</span>
+          <span className="text-xs sm:text-sm text-gray-900 dark:text-white truncate pr-2 self-center">{b.name}</span>
           <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{b.overs}</span>
           <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{b.maidens}</span>
           <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{b.runs}</span>
           <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white text-center self-center">{b.wickets}</span>
-          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center self-center">{b.noBalls}</span>
-          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-right self-center">{Number(b.economy).toFixed(2)}</span>
+          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-right self-center">
+            {b.economy ? Number(b.economy).toFixed(2) : '0.00'}
+          </span>
         </div>
       ))}
-    </div>
-  </div>
-)
-
-// ─── Fall of Wickets ──────────────────────────────────────────────────────────
-const FallOfWicketsTable = ({ fow }) => (
-  <div className="mt-4">
-    <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-lg">
-      <div className="grid grid-cols-[1fr_120px_80px] px-3 sm:px-4 py-2">
-        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Fall of Wickets</span>
-        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center">Score</span>
-        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-right">Over</span>
-      </div>
-    </div>
-    <div className="border border-gray-200 dark:border-gray-700 border-t-0 rounded-b-lg">
-      {fow.map((w, idx) => (
-        <div
-          key={idx}
-          className={`grid grid-cols-[1fr_120px_80px] px-3 sm:px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 last:border-b-0 ${
-            idx % 2 === 0 ? 'bg-white dark:bg-[#1c2128]' : 'bg-gray-50/40 dark:bg-[#161b22]'
-          }`}
-        >
-          <span className="text-xs sm:text-sm text-gray-900 dark:text-white truncate">{w.batsman}</span>
-          <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 text-center">{w.score} - {w.wicket}</span>
-          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-right">{w.over}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-)
-
-// ─── Powerplays ───────────────────────────────────────────────────────────────
-const PowerplaysTable = ({ powerplays }) => (
-  <div className="mt-4">
-    <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-lg">
-      <div className="grid grid-cols-[1fr_120px_80px] px-3 sm:px-4 py-2">
-        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Powerplays</span>
-        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-center">Overs</span>
-        <span className="text-xs font-bold text-gray-700 dark:text-gray-300 text-right">Runs</span>
-      </div>
-    </div>
-    <div className="border border-gray-200 dark:border-gray-700 border-t-0 rounded-b-lg">
-      {powerplays.map((pp, idx) => (
-        <div key={idx} className="grid grid-cols-[1fr_120px_80px] px-3 sm:px-4 py-2.5 bg-white dark:bg-[#1c2128] last:rounded-b-lg">
-          <span className="text-xs sm:text-sm text-gray-900 dark:text-white">{pp.name}</span>
-          <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center">{pp.overs}</span>
-          <span className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white text-right">{pp.runs}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-)
-
-// ─── Partnerships ─────────────────────────────────────────────────────────────
-const PartnershipsTable = ({ partnerships, batting }) => (
-  <div className="mt-4">
-    <div className="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-lg px-3 sm:px-4 py-2">
-      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Partnerships</span>
-    </div>
-    <div className="border border-gray-200 dark:border-gray-700 border-t-0 rounded-b-lg">
-      {partnerships.map((p, idx) => {
-        const parts = (p.batsmen || '').split(' / ')
-        const b1 = batting.find(b => b.name === parts[0]?.trim())
-        const b2 = batting.find(b => b.name === parts[1]?.trim())
-        return (
-          <div
-            key={idx}
-            className={`grid grid-cols-[1fr_1fr_80px] px-3 sm:px-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 last:rounded-b-lg gap-2 ${
-              idx % 2 === 0 ? 'bg-white dark:bg-[#1c2128]' : 'bg-gray-50/40 dark:bg-[#161b22]'
-            }`}
-          >
-            <div className="min-w-0">
-              {b1 && <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 truncate">{b1.name} <span className="text-gray-500">{b1.runs}({b1.balls})</span></p>}
-              {b2 && <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 truncate mt-0.5">{b2.name} <span className="text-gray-500">{b2.runs}({b2.balls})</span></p>}
-            </div>
-            <div className="min-w-0 hidden sm:block">
-              {b1 && <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 truncate">{b1.name} <span className="text-gray-500">{b1.runs}({b1.balls})</span></p>}
-              {b2 && <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 truncate mt-0.5">{b2.name} <span className="text-gray-500">{b2.runs}({b2.balls})</span></p>}
-            </div>
-            <div className="text-right self-center">
-              <span className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">{p.runs}({p.balls})</span>
-            </div>
-          </div>
-        )
-      })}
     </div>
   </div>
 )
 
 // ─── Match Selector ───────────────────────────────────────────────────────────
-const MatchSelector = ({ matches, selectedSlug, onSelect }) => (
-  <div className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-4">
-    <div className="px-3 sm:px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Select Match</span>
-    </div>
+const MatchSelector = ({ matches, selectedId, onSelect }) => {
+  if (!matches?.length) return null
 
-    <div className="overflow-x-auto scrollbar-hide">
-      <div className="flex min-w-max">
-        {matches.map((m) => (
-          <button
-            key={m.slug}
-            onClick={() => onSelect(m)}
-            className={`flex-shrink-0 px-3 sm:px-4 py-2.5 text-xs font-medium border-b-2 transition-colors whitespace-nowrap flex items-center gap-1.5 ${
-              String(selectedSlug) === String(m.slug)
-                ? 'border-[#00698c] text-[#00698c] bg-[#00698c]/5 dark:bg-[#00698c]/10'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            <span className="w-10 h-10 rounded-full flex items-center justify-center text-gray-700  dark:text-gray-100 font-bold">
-              {m.teams?.team1?.code?.slice(0, 2)}
-            </span>
+  // Group by status for better UX
+  const live     = matches.filter(m => m.type === 'Live')
+  const recent   = matches.filter(m => m.type === 'Recent')
+  const upcoming = matches.filter(m => m.type === 'Upcoming')
+  const ordered  = [...live, ...recent, ...upcoming]
 
-            <span className="text-gray-400">vs</span>
-
-            <span className="w-10 h-10 rounded-full flex items-center justify-center dark:text-gray-100 text-gray-700 font-bold">
-              {m.teams?.team2?.code?.slice(0, 2)}
-            </span>
-          </button>
-        ))}
+  return (
+    <div className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-4">
+      <div className="px-3 sm:px-4 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
+        <span className="text-xs font-bold text-gray-600 dark:text-gray-300">Select Match</span>
+        <span className="text-[10px] text-gray-400">{matches.length} matches</span>
+      </div>
+      <div className="overflow-x-auto scrollbar-hide">
+        <div className="flex min-w-max">
+          {ordered.map((m) => {
+            const t1 = m?.team1?.shortName || 'T1'
+            const t2 = m?.team2?.shortName || 'T2'
+            const isSelected = String(selectedId) === String(m.matchId)
+            const isLive = m.type === 'Live'
+            return (
+              <button
+                key={m.matchId}
+                onClick={() => m.type !== 'Upcoming' && onSelect(m.matchId)}
+                disabled={m.type === 'Upcoming'}
+                className={`flex-shrink-0 px-3 py-3 text-xs font-medium border-b-2 transition-colors whitespace-nowrap flex flex-col items-center gap-0.5 ${
+                  isSelected
+                    ? 'border-[#00698c] text-[#00698c] bg-[#00698c]/5'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed'
+                }`}
+              >
+                <span className="flex items-center gap-1">
+                  {isLive && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />}
+                  <span className="font-bold">{t1}</span>
+                  <span className="text-gray-400 text-[10px]">vs</span>
+                  <span className="font-bold">{t2}</span>
+                </span>
+                <span className={`text-[10px] ${
+                  isLive ? 'text-red-400' : m.type === 'Recent' ? 'text-emerald-500' : 'text-gray-400'
+                }`}>
+                  {m.matchDesc || m.type}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
+
+// ─── Live refresh indicator ───────────────────────────────────────────────────
+const LiveBadge = ({ isLive, lastUpdated }) => {
+  if (!isLive) return null
+  return (
+    <div className="flex items-center gap-1.5 text-xs text-red-400 font-bold">
+      <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
+      LIVE
+      {lastUpdated && (
+        <span className="text-gray-400 font-normal ml-1">
+          · Updated {lastUpdated.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </span>
+      )}
+    </div>
+  )
+}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const IPLScorecardPage = () => {
-  const { slug, series } = useParams()
+  const { matchId } = useParams()
+  const navigate    = useNavigate()
 
-  const navigate = useNavigate()
-  const [activeInnings, setActiveInnings] = useState(1)
+  const [scorecard,     setScorecard]     = useState(null)
+  const [matchInfo,     setMatchInfo]     = useState(null)
+  const [allMatches,    setAllMatches]    = useState([])
+  const [activeInnings, setActiveInnings] = useState(0)
+  const [loading,       setLoading]       = useState(true)
+  const [lastUpdated,   setLastUpdated]   = useState(null)
+  const pollTimer = useRef(null)
 
-  const tabs = ['Home', 'Scorecard', 'Matches', 'Table', 'News', 'Photos', 'Video']
+  const isLive = matchInfo?.type === 'Live' || matchInfo?.state === 'In Progress'
 
-  // Tab navigation routes — News/Photos/Video ke liye proper routes
-  const tabRoutes = {
-    Home:      '/cricket/ipl',
-    Scorecard: null, // current page
-    Matches:   '/cricket/ipl',
-    Table:     null,
-    News:      '/cricket/news',
-    Photos:    '/photogallary',
-    Video:     '/vediogallary',
+  // ── Load match data ────────────────────────────────────────────────────────
+const loadMatch = useCallback(async (id) => {
+  if (!id) return
+  try {
+    const [sc, info, matches] = await Promise.allSettled([
+      getScorecard(id),
+      getMatchInfo(id),
+      getAllMatches(),
+    ])
+    if (sc.status      === 'fulfilled') setScorecard(sc.value)
+    if (info.status    === 'fulfilled') setMatchInfo(info.value)
+    if (matches.status === 'fulfilled') setAllMatches(matches.value || [])
+
+    // ← ADD THIS: status from scorecard if matchInfo doesn't have result
+    if (sc.status === 'fulfilled' && sc.value?.status) {
+      setMatchInfo(prev => prev
+        ? { ...prev, result: prev.result || sc.value.status }
+        : { result: sc.value.status }
+      )
+    }
+
+    setLastUpdated(new Date())
+  } catch { /* silent */ } finally {
+    setLoading(false)
   }
+}, [])
 
- // Find scorecard by slug + series
-const scorecard = iplScorecards.find(
-  (sc) =>
-    String(sc.slug) === String(slug) &&
-    String(sc.series) === String(series)
-)
+  // ── Initial load ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    setLoading(true)
+    setScorecard(null)
+    setMatchInfo(null)
+    setActiveInnings(0)
+    loadMatch(matchId)
+  }, [matchId, loadMatch])
 
-  const team1Innings = scorecard?.teams?.team1?.innings
-  const team2Innings = scorecard?.teams?.team2?.innings
+  // ── Live polling: refresh scorecard every 2 min if match is live ──────────
+  useEffect(() => {
+    clearInterval(pollTimer.current)
+    if (isLive && matchId) {
+      pollTimer.current = setInterval(() => loadMatch(matchId), 2 * 60 * 1000)
+    }
+    return () => clearInterval(pollTimer.current)
+  }, [isLive, matchId, loadMatch])
 
-const handleMatchSelect = (match) => {
-  navigate(`/cricket/ipl/scorecard/${match.slug}/${match.series}`)
-}
+  const innings = scorecard?.innings || []
+  const inning  = innings[activeInnings]
+  const t1Name  = matchInfo?.team1?.name || innings[0]?.teamName || 'Team 1'
+  const t2Name  = matchInfo?.team2?.name || innings[1]?.teamName || 'Team 2'
+  const pageTitle = matchInfo
+    ? `${matchInfo.team1?.shortName || t1Name} vs ${matchInfo.team2?.shortName || t2Name} Scorecard | IPL 2025`
+    : 'Scorecard | IPL 2025 | SportyRadar'
 
   return (
     <>
-      <SeoManager
-       title={`${scorecard?.teams.team1.name} vs ${scorecard?.teams.team2.name} Scorecard | IPL 2026`}
-      />
+      <SeoManager title={pageTitle} />
       <SportsTabs />
-      <CricketTabs extraTab={{ label: 'IPL 2026', path: '/cricket/ipl' }} />
+      <CricketTabs extraTab={{ label: 'IPL 2025', path: '/cricket/ipl' }} />
 
-      {/* Main layout: scorecard content + right sidebar space */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         <div className="flex gap-6">
-
-          {/* Left: Scorecard content — 80% width */}
           <div className="w-full lg:w-[80%] min-w-0">
 
-            {/* IPL Banner */}
-            <div className="bg-[#00698c] text-white rounded-t-lg px-3 sm:px-4 py-2.5">
-              <h2 className="text-sm sm:text-base font-bold tracking-wide">INDIAN PREMIER LEAGUE  2026</h2>
-            </div>
+            <IPLBanner />
+            <IPLSubTabs active="Scorecard" />
 
-            {/* Sub-tabs */}
-            <div className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 border-t-0 ">
-              <div className="flex items-center overflow-x-auto scrollbar-hide border-b pb-3 border-gray-100 dark:border-gray-700">
-                {tabs.map((tab) => {
-                  const isActive = tab === 'Scorecard'
-                  const route = tabRoutes[tab]
-                  return (
-                    <button
-                      key={tab}
-                      onClick={() => {
-                        if (tab === 'Scorecard') return
-                        if (route) navigate(route)
-                      }}
-                      className={`flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                        isActive
-                          ? 'border-[#00698c] text-[#00698c]'
-                          : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                      }`}
-                    >
-                      {tab}
-                    </button>
-                  )
-                })}
-              </div>
+            <div className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 border-t-0 rounded-b-lg">
 
               {/* Match title bar */}
-              <div className="bg-[#004d66] dark:bg-[#003344] text-white px-3 sm:px-4 py-2">
-                <p className="text-xs sm:text-sm font-medium">
-                  {scorecard
-                    ? `${scorecard.teams.team1.name} vs ${scorecard.teams.team2.name}, ${scorecard.matchNumber}, IPL 2026`
-                    : `${match?.team1?.name} vs ${match?.team2?.name}, ${match?.matchNumber}, IPL 2026`}
-                </p>
-              </div>
+              {matchInfo && (
+                <div className="bg-[#004d66] dark:bg-[#003344] text-white px-3 sm:px-4 py-2.5 flex items-center justify-between">
+                  <p className="text-xs sm:text-sm font-medium">
+                    {t1Name} vs {t2Name}
+                    {matchInfo.matchDesc ? `, ${matchInfo.matchDesc}` : ', IPL 2025'}
+                  </p>
+                  <LiveBadge isLive={isLive} lastUpdated={lastUpdated} />
+                </div>
+              )}
 
               {/* Match meta */}
-              <div className="px-3 sm:px-4 py-3 sm:py-4">
-                <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-3">
-                  <span className="text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400">Series:</span>
-                  <span className="text-xs sm:text-base font-medium text-gray-900 dark:text-white">Indian Premier League 2026</span>
-                  <span className="text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400">Venue:</span>
-                  <span className="text-xs sm:text-base font-medium text-gray-900 dark:text-white">{scorecard?.venue || match?.venue}</span>
-                  <span className="text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400">Date & Time:</span>
-                  <span className="text-xs sm:text-base font-medium text-gray-900 dark:text-white">
-                    {scorecard?.date || match?.date}, {scorecard?.time || match?.time}
-                  </span>
-                  {scorecard?.toss && (
-                    <>
-                      <span className="text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400">Toss:</span>
-                      <span className="text-xs sm:text-base font-medium text-gray-900 dark:text-white">
-                        {scorecard.toss.winner} won the toss and chose to {scorecard.toss.decision}
+              {matchInfo && (
+                <div className="px-3 sm:px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                  <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
+                    {matchInfo.venue && <>
+                      <span className="text-xs font-semibold text-gray-400">Venue</span>
+                      <span className="text-xs text-gray-800 dark:text-gray-200">{matchInfo.venue}</span>
+                    </>}
+                    {matchInfo.city && <>
+                      <span className="text-xs font-semibold text-gray-400">City</span>
+                      <span className="text-xs text-gray-800 dark:text-gray-200">{matchInfo.city}</span>
+                    </>}
+                    {scorecard?.toss && <>
+                      <span className="text-xs font-semibold text-gray-400">Toss</span>
+                      <span className="text-xs text-gray-800 dark:text-gray-200">{scorecard.toss}</span>
+                    </>}
+                    {matchInfo.result && <>
+                      <span className="text-xs font-semibold text-gray-400">Result</span>
+                      <span className="text-xs font-bold text-[#00698c]">{matchInfo.result}</span>
+                    </>}
+                    {scorecard?.playerOfMatch?.name && <>
+                      <span className="text-xs font-semibold text-gray-400">Player of Match</span>
+                      <span className="text-xs font-bold text-gray-900 dark:text-white">
+                        ⭐ {scorecard.playerOfMatch.name}
                       </span>
-                    </>
-                  )}
-                  {scorecard?.result && (
-                    <>
-                      <span className="text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400">Result:</span>
-                      <span className="text-xs sm:text-base font-semibold text-[#00698c] dark:text-[#3399b3]">{scorecard.result}</span>
-                    </>
-                  )}
-                  {scorecard?.playerOfTheMatch && (
-                    <>
-                      <span className="text-xs sm:text-base font-medium text-gray-500 dark:text-gray-400">Player of Match:</span>
-                      <span className="text-xs sm:text-base font-semibold text-gray-900 dark:text-white"> {scorecard.playerOfTheMatch}</span>
-                    </>
-                  )}
+                    </>}
+                  </div>
                 </div>
+              )}
+
+              <div className="p-3 sm:p-4">
+                {/* Match selector */}
+                <MatchSelector
+                  matches={allMatches}
+                  selectedId={matchId}
+                  onSelect={(id) => navigate(`/cricket/ipl/scorecard/${id}`)}
+                />
+
+                {loading ? (
+                  <SkeletonList count={6} />
+                ) : !scorecard ? (
+                  <EmptyState
+                    message={isLive
+                      ? "Scorecard loading... match is live, retry in 2 minutes"
+                      : "Scorecard not available yet"
+                    }
+                    icon="📋"
+                  />
+                ) : innings.length === 0 ? (
+                  <EmptyState message="No innings data found" icon="🏏" />
+                ) : (
+                  <>
+                    {/* Innings tabs */}
+                    <div className="flex border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mb-4">
+                      {innings.map((inn, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => setActiveInnings(idx)}
+                          className={`flex-1 py-2.5 text-xs sm:text-sm font-semibold transition-colors ${
+                            idx > 0 ? 'border-l border-gray-200 dark:border-gray-700' : ''
+                          } ${
+                            activeInnings === idx
+                              ? 'bg-[#00698c] text-white'
+                              : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          <span className="hidden sm:inline">{inn.teamName || (idx === 0 ? t1Name : t2Name)} — </span>
+                          <span>{inn.score}/{inn.wickets}</span>
+                          <span className="hidden sm:inline text-[10px] opacity-70 ml-1">({inn.overs} ov)</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Scorecard content */}
+                    {inning && <BattingTable innings={inning} />}
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Match Selector */}
-            <div className="mt-4">
-             <MatchSelector
-  matches={iplScorecards}
- selectedSlug={scorecard?.slug}
-  onSelect={handleMatchSelect}
-/>
-            </div>
-
-            {/* Innings toggle tabs */}
-            {scorecard && (
-              <>
-                <div className="flex border border-gray-200 dark:border-gray-700 rounded-t-lg overflow-hidden mt-2">
-                  {[1, 2].map((n) => {
-                    const teamName = n === 1
-                      ? scorecard.teams.team1.name
-                      : scorecard.teams.team2.name
-                    return (
-                      <button
-                        key={n}
-                        onClick={() => setActiveInnings(n)}
-                        className={`flex-1 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-colors ${
-                          n > 1 ? 'border-l border-gray-200 dark:border-gray-700' : ''
-                        } ${
-                          activeInnings === n
-                            ? 'bg-gray-500 text-white'
-                            : 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                       <span className="hidden sm:inline">{teamName} </span>Innings {n}
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {/* Scorecard content */}
-                <div className="mt-0">
-                  {activeInnings === 1 && team1Innings && (
-                    <BattingTable innings={team1Innings} teamName={scorecard.teams.team1.name} />
-                  )}
-                  {activeInnings === 2 && team2Innings && (
-                    <BattingTable innings={team2Innings} teamName={scorecard.teams.team2.name} />
-                  )}
-                </div>
-              </>
-            )}
-
           </div>
-
-          {/* Right: Empty space reserved for future sidebar — adjust w-[20%] to control width */}
-          <div className="hidden lg:block lg:w-[20%]">
-            {/* Sidebar content add karo yahan */}
-          </div>
-
+          <div className="hidden lg:block lg:w-[20%]">{/* sidebar */}</div>
         </div>
       </div>
 
-      {/* BlogsSection: separate full-width container — same width as other IPL pages */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <BlogsSection />
       </div>
