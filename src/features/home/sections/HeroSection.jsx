@@ -290,7 +290,7 @@ const HeroSection = memo(() => {
   const [nextImageIndex, setNextImageIndex] = useState(null)
   const [animating, setAnimating] = useState(false)
   const [direction, setDirection] = useState('left')
-  const [containerHeight, setContainerHeight] = useState('70vh') // 👈 default reduced
+  const [containerHeight, setContainerHeight] = useState('70vh')
   const timerRef = useRef(null)
   const containerRef = useRef(null)
 
@@ -335,8 +335,8 @@ const HeroSection = memo(() => {
         const aspectRatio = img.naturalHeight / img.naturalWidth
         const containerWidth = window.innerWidth
 
-        // 👇 MAIN CHANGE: height reduce factor
-        const scaleFactor = 0.7   // 🔥 change this (0.6–0.8 best)
+        // 🔥 MODERATE increase - 0.85 instead of 0.7 (thoda sa badha)
+        const scaleFactor = 0.85  // Balance between height and comfort
         const calculatedHeight = containerWidth * aspectRatio * scaleFactor
 
         setContainerHeight(`${calculatedHeight}px`)
@@ -386,7 +386,7 @@ const HeroSection = memo(() => {
           width: '100%',
           height: '100%',
           display: 'block',
-          objectFit: 'fill' // 👈 no crop, stretch allowed
+          objectFit: 'cover'  // No stretch - maintains aspect ratio
         }}
       />
     </div>

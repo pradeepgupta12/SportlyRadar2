@@ -1,14 +1,9 @@
-// src/features/news/pages/NewsListPage.jsx
-// Single "View All" page for Cricket, Football and Other Sports news.
-// The sport is determined by the URL: /cricket/news  /football/news  /sports/news
 
-import { memo, useMemo } from 'react'
+
+import { memo, useMemo, useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import { getCricketNews, getIPLNews } from '../../../service/sports.service.js'
+import { getLatestNews } from '../../../service/sports.service.js'
 import { headlinesData } from '@/shared/constants/headlines.data'
-
-// ── Map pathname → data & meta ─────────────────────────────────────────────
 
 const CONFIG = {
   '/cricket/news': {
@@ -17,7 +12,7 @@ const CONFIG = {
     basePath: '/cricket/news',
     emoji: '🏏',
   },
-  '/ipl/news': { // ✅ NEW
+  '/ipl/news': {
     label: 'IPL',
     type: 'ipl',
     basePath: '/ipl/news',
@@ -38,11 +33,10 @@ const CONFIG = {
   },
 }
 
-// ── Card components ────────────────────────────────────────────────────────
-
 const NewsCard = memo(({ item, basePath }) => (
   <Link
     to={`${basePath}/${item.slug}`}
+    state={{ article: item }}
     className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow group block"
   >
     <div className="relative h-44 overflow-hidden">
@@ -52,12 +46,10 @@ const NewsCard = memo(({ item, basePath }) => (
         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         loading="lazy"
       />
-      {/* Category badge */}
       <span className="absolute top-2 left-2 bg-[#00698c] text-white text-[10px] font-bold px-2 py-0.5 rounded">
         {item.subCategory || item.category}
       </span>
     </div>
-
     <div className="p-3">
       <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-snug line-clamp-2 group-hover:text-[#00698c] transition-colors mb-2">
         {item.title}
@@ -68,20 +60,12 @@ const NewsCard = memo(({ item, basePath }) => (
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] font-semibold text-[#00698c]">{item.source}</span>
-          {item.author && (
-            <>
-              <span className="text-gray-300 dark:text-gray-600">·</span>
-              <span className="text-[10px] text-gray-400 dark:text-gray-500">{item.author}</span>
-            </>
-          )}
         </div>
         <span className="text-[10px] text-gray-400 dark:text-gray-500">{item.time}</span>
       </div>
     </div>
   </Link>
 ))
-
-// ── Headline card (text only) ──────────────────────────────────────────────
 
 const HeadlineCard = memo(({ item }) => (
   <Link
@@ -114,104 +98,67 @@ const HeadlineCard = memo(({ item }) => (
   </Link>
 ))
 
-// ── Main Page ──────────────────────────────────────────────────────────────
-
 const NewsListPage = () => {
   const [news, setNews] = useState([])
-const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
   const { pathname } = useLocation()
 
-  // Resolve config based on current path
   const config = useMemo(() => {
-    // Exact match first
     if (CONFIG[pathname]) return CONFIG[pathname]
-    // Partial match fallback
     const key = Object.keys(CONFIG).find((k) => pathname.startsWith(k))
     return key ? CONFIG[key] : null
   }, [pathname])
 
- if (!config) {
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
-      <p className="text-gray-500 dark:text-gray-400">Section not found.</p>
-      <Link to="/" className="text-[#00698c] hover:underline mt-2 inline-block text-sm">
-        Go Home
-      </Link>
-    </div>
-  )
-}
+  const isHeadlines = config?.basePath === '/headlines'
 
-const isHeadlines = config.basePath === '/headlines'
- 
-
-
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-  setLoading(true)
-  setNews([]) // ✅ ADD THIS
-
-  let res
-
-      if (config === 'cricket') {
-        res = await getCricketNews()
-      } else if (config === 'ipl') {
-        res = await getIPLNews()
-      }
-
-      if (res?.success) {
-        const formatted = res.data.map((item, index) => ({
-          id: `${config.type}-${index}`, // ✅ better unique id
-          title: item.title,
-          description: item.description,
-          image: item.image,
-          source: item.source,
-          time: new Date(item.publishedAt).toLocaleDateString(),
-          slug: `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${index}`,
-          category: config.label,
-        }))
-
-        setNews(formatted)
-      } else {
-        setNews([])
-      }
-
-    } catch (err) {
-      console.error(err)
-      setNews([])
-    } finally {
+  useEffect(() => {
+    if (!config || isHeadlines) {
       setLoading(false)
+      return
     }
-  }
 
-  if (config === 'headlines') {
-    setLoading(false)
-    return
-  }
+    const fetchData = async () => {
+      setLoading(true)
+      setNews([])
+      try {
+        const res = await getLatestNews()
+        if (res.success) {
+          const formatted = res.data.map((item) => ({
+            ...item,
+            time: new Date(item.publishedAt).toLocaleDateString(),
+            category: config.label,
+          }))
+          setNews(formatted)
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  if (config) {
     fetchData()
+  }, [config, isHeadlines])
+
+  if (!config) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 text-center">
+        <p className="text-gray-500 dark:text-gray-400">Section not found.</p>
+        <Link to="/" className="text-[#00698c] hover:underline mt-2 inline-block text-sm">
+          Go Home
+        </Link>
+      </div>
+    )
   }
 
-}, [config]) // ✅ FIXED dependency
+  const dataToRender = isHeadlines ? config.data : news
 
-const dataToRender = config.type === 'headlines' ? config.data : news
-
-
-  
-
-
-if (loading) {
-  return (
-    <div className="text-center py-20 text-gray-400">
-      Loading news...
-    </div>
-  )
-}
+  if (loading) {
+    return <div className="text-center py-20 text-gray-400">Loading news...</div>
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-      {/* Page header */}
       <div className="flex items-center gap-2 mb-6">
         <Link to="/" className="text-gray-400 dark:text-gray-500 hover:text-[#00698c] transition-colors text-sm">
           Home
@@ -232,7 +179,6 @@ if (loading) {
         </span>
       </div>
 
-      {/* Grid */}
       {isHeadlines ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {dataToRender.map((item) => (
