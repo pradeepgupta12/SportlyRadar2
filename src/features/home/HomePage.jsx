@@ -758,12 +758,13 @@ import { footballNewsData } from '@/shared/constants/footballNews.data'
 import { otherSportsNewsData } from '@/shared/constants/otherSportsNews.data'
 import NewsGrid from '../../features/home/sections/NewsGrid'
 import HeroSection from '../../features/home/sections/HeroSection.jsx'
-import BlogsRow from '@/shared/components/BlogsRow.jsx'
+
 
 
 // HomePage.jsx mein — TopHeadlines import hata do, ye add karo:
 
 import { getCricketNews, getIPLNews } from '../../service/sports.service.js' // path adjust karo
+import BlogsRow from '../../shared/components/Blogsrow.jsx'
 
 const LatestNewsSection = memo(() => {
   const [news, setNews] = useState([])
