@@ -442,9 +442,11 @@ import BlogsRow from '../../shared/components/Blogsrow.jsx'
 
 const LatestNewsSection = memo(() => {
   const [news, setNews] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchLatest = async () => {
+      setLoading(true)
       try {
         const [c, i] = await Promise.all([getCricketNews(), getIPLNews()])
         const cricket = c.success
@@ -474,12 +476,49 @@ const LatestNewsSection = memo(() => {
         setNews([...cricket, ...ipl].slice(0, 9))
       } catch (e) {
         console.error(e)
+        setNews([])
+      } finally {
+        setLoading(false)
       }
     }
     fetchLatest()
   }, [])
 
-  if (!news.length) return null
+  if (loading) {
+    return (
+      <div className="mb-8">
+        <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-4">Latest News</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="flex items-start gap-2.5">
+                <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-600 mt-1.5" />
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (!news.length) {
+    return (
+      <div className="mb-8">
+        <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-4">Latest News</h2>
+        <div className="text-center py-8 text-gray-400 bg-gray-50 dark:bg-gray-800/30 rounded-lg">
+          <svg className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+          </svg>
+          <p className="text-sm">No articles found</p>
+          <p className="text-xs text-gray-400 mt-1">Unable to connect to news server</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mb-8">
@@ -558,9 +597,11 @@ const FeaturedMatch = memo(() => {
 // ─── Latest News Sidebar Component (Replaces QuickLinks) ─────────────────────
 const LatestNewsSidebar = memo(() => {
   const [latestNews, setLatestNews] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchLatestSidebarNews = async () => {
+      setLoading(true)
       try {
         const [c, i] = await Promise.all([getCricketNews(), getIPLNews()])
         const cricket = c.success
@@ -593,12 +634,44 @@ const LatestNewsSidebar = memo(() => {
         setLatestNews(allNews)
       } catch (e) {
         console.error(e)
+        setLatestNews([])
+      } finally {
+        setLoading(false)
       }
     }
     fetchLatestSidebarNews()
   }, [])
 
-  if (!latestNews.length) return null
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm mb-6">
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2 px-1">Quick Links</h3>
+        <ul>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <li key={i}>
+              <div className="animate-pulse px-1 py-2 border-b border-gray-100 dark:border-gray-700">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+
+  if (!latestNews.length) {
+    return (
+      <div className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm mb-6">
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2 px-1">Quick Links</h3>
+        <div className="text-center py-6 text-gray-400">
+          <svg className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+          </svg>
+          <p className="text-xs">No articles found</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-white dark:bg-[#1c2128] border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm mb-6">
@@ -723,8 +796,10 @@ const VideosSection = memo(() => {
 
 const HomePage = () => {
   const navigate = useNavigate()
-  const [cricketNews, setCricketNews] = useState([])   // ← ADD
-  const [iplNews, setIplNews] = useState([])          // ← ADD
+  const [cricketNews, setCricketNews] = useState([])
+  const [iplNews, setIplNews] = useState([])
+  const [cricketLoading, setCricketLoading] = useState(true)
+  const [iplLoading, setIplLoading] = useState(true)
   
   useEffect(() => {
     const fetchAll = async () => {
@@ -743,6 +818,8 @@ const HomePage = () => {
               category:    'Cricket',
             }))
           )
+        } else {
+          setCricketNews([])
         }
         if (i.success) {
           setIplNews(
@@ -757,9 +834,16 @@ const HomePage = () => {
               category:    'IPL',
             }))
           )
+        } else {
+          setIplNews([])
         }
       } catch (e) {
         console.error(e)
+        setCricketNews([])
+        setIplNews([])
+      } finally {
+        setCricketLoading(false)
+        setIplLoading(false)
       }
     }
     fetchAll()
@@ -824,7 +908,8 @@ const HomePage = () => {
             <NewsGrid
               title="Cricket News & Updates"
               viewAllTo="/news"
-              items={cricketNews}        
+              items={cricketNews}
+              loading={cricketLoading}
               basePath="/cricket/news"
             />
           </div>
@@ -838,6 +923,7 @@ const HomePage = () => {
               title="Football News & Updates"
               viewAllTo="/football/news"
               items={footballNewsData}
+              loading={false}
               basePath="/football/news"
             />
           </div>
@@ -851,6 +937,7 @@ const HomePage = () => {
               title="Other Sports News & Updates"
               viewAllTo="/sports/news"
               items={otherSportsNewsData}
+              loading={false}
               basePath="/sports/news"
             />
           </div>
