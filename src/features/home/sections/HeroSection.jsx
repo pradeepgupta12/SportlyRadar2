@@ -101,17 +101,198 @@
 // export default HeroSection
 
 
+// import { memo, useState, useEffect, useRef } from 'react'
+// import LiveTicker from '../../../layouts/LiveTicker'
+// import Category from '../../../layouts/Category.jsx'
+// //import Headline from '../../../layouts/Headline.jsx'
+
+// const HeroSection = memo(() => {
+//   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+//   const [nextImageIndex, setNextImageIndex] = useState(null)
+//   const [animating, setAnimating] = useState(false)
+//   const [direction, setDirection] = useState('left')
+//   const timerRef = useRef(null)
+
+//   const images = [
+//     {
+//       desktop: '/Desktop4.png',
+//       laptop: '/Laptop3.png',
+//       tablet: '/Tablet.png',
+//       mobile: '/mobile.png',
+//       alt: 'Sports Stadium 1'
+//     },
+//     {
+//       desktop: '/Desktop5.png',
+//       laptop: '/Laptop4.png',
+//       tablet: '/Tablet3.png',
+//       mobile: '/mobile2.png',
+//       alt: 'Sports Stadium 2'
+//     },
+//     {
+//       desktop: '/Desktop6.png',
+//       laptop: '/Laptop5.png',
+//       tablet: '/tablet4.png',
+//       mobile: '/mobile3.png',
+//       alt: 'Sports Stadium 3'
+//     }
+//   ]
+
+//   const goToIndex = (newIndex, dir = 'left') => {
+//     if (animating || newIndex === currentImageIndex) return
+//     setDirection(dir)
+//     setNextImageIndex(newIndex)
+//     setAnimating(true)
+//     setTimeout(() => {
+//       setCurrentImageIndex(newIndex)
+//       setNextImageIndex(null)
+//       setAnimating(false)
+//     }, 380)
+//   }
+
+//   const resetTimer = () => {
+//     if (timerRef.current) clearInterval(timerRef.current)
+//     timerRef.current = setInterval(() => {
+//       setCurrentImageIndex(prev => {
+//         const next = (prev + 1) % images.length
+//         goToIndex(next, 'left')
+//         return prev
+//       })
+//     }, 5000)
+//   }
+
+//   useEffect(() => {
+//     resetTimer()
+//     return () => clearInterval(timerRef.current)
+//   }, [currentImageIndex])
+
+//   const ImageSlide = ({ image, className = '' }) => (
+//     <div className={`absolute inset-0 w-full h-full ${className}`}>
+//       <picture className="absolute inset-0 w-full h-full" style={{ display: 'block' }}>
+//         <source media="(min-width: 1280px)" srcSet={image.desktop} />
+//         <source media="(min-width: 1024px) and (max-width: 1279px)" srcSet={image.laptop} />
+//         <source media="(min-width: 768px) and (max-width: 1023px)" srcSet={image.tablet} />
+//         <source media="(max-width: 767px)" srcSet={image.mobile} />
+//         <img
+//           src={image.desktop}
+//           alt={image.alt}
+//           className="w-full h-full object-cover object-bottom"
+//           style={{ display: 'block' }}
+//         />
+//       </picture>
+//     </div>
+//   )
+
+//   return (
+//     <div
+//       className="relative text-white overflow-hidden"
+//       style={{ height: 'clamp(420px, 75vh, 780px)' }}
+//     >
+//       <style>{`
+//         @keyframes slideCurrentOut {
+//           from { transform: translateX(0%); }
+//           to   { transform: translateX(-100%); }
+//         }
+//         @keyframes slideNextIn {
+//           from { transform: translateX(100%); }
+//           to   { transform: translateX(0%); }
+//         }
+//         @keyframes slideCurrentOutReverse {
+//           from { transform: translateX(0%); }
+//           to   { transform: translateX(100%); }
+//         }
+//         @keyframes slideNextInReverse {
+//           from { transform: translateX(-100%); }
+//           to   { transform: translateX(0%); }
+//         }
+//         .slide-current-out {
+//           animation: slideCurrentOut 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+//         }
+//         .slide-next-in {
+//           animation: slideNextIn 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+//         }
+//         .slide-current-out-reverse {
+//           animation: slideCurrentOutReverse 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+//         }
+//         .slide-next-in-reverse {
+//           animation: slideNextInReverse 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+//         }
+//       `}</style>
+
+//       {/* Current image — slides out */}
+//       <ImageSlide
+//         image={images[currentImageIndex]}
+//         className={
+//           animating
+//             ? direction === 'left'
+//               ? 'slide-current-out'
+//               : 'slide-current-out-reverse'
+//             : ''
+//         }
+//       />
+
+//       {/* Next image — slides in */}
+//       {animating && nextImageIndex !== null && (
+//         <ImageSlide
+//           image={images[nextImageIndex]}
+//           className={direction === 'left' ? 'slide-next-in' : 'slide-next-in-reverse'}
+//         />
+//       )}
+
+//       {/* Dark overlay */}
+//       <div className="absolute inset-0 bg-black/30 z-10" />
+
+//       {/* LiveTicker */}
+//       <div className="relative z-20">
+//         <LiveTicker />
+//       </div>
+
+//       {/* Category */}
+//       <div className="relative z-20">
+//         <Category />
+//       </div>
+
+//       {/* Carousel dots */}
+//       <div className="absolute bottom-6 left-0 right-0 z-30 flex justify-center gap-2">
+//         {images.map((_, index) => (
+//           <button
+//             key={index}
+//             onClick={() => {
+//               goToIndex(index, index > currentImageIndex ? 'left' : 'right')
+//               resetTimer()
+//             }}
+//             className={`transition-all duration-300 rounded-full ${
+//               currentImageIndex === index
+//                 ? 'w-8 h-2 bg-white'
+//                 : 'w-2 h-2 bg-white/50 hover:bg-white/75'
+//             }`}
+//             aria-label={`Go to slide ${index + 1}`}
+//           />
+//         ))}
+//       </div>
+
+//       {/* Headline */}
+//       {/* <div className="absolute bottom-0 left-0 right-0 z-30">
+//         <Headline />
+//       </div> */}
+//     </div>
+//   )
+// })
+
+// HeroSection.displayName = 'HeroSection'
+// export default HeroSection
+
 import { memo, useState, useEffect, useRef } from 'react'
 import LiveTicker from '../../../layouts/LiveTicker'
 import Category from '../../../layouts/Category.jsx'
-//import Headline from '../../../layouts/Headline.jsx'
 
 const HeroSection = memo(() => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [nextImageIndex, setNextImageIndex] = useState(null)
   const [animating, setAnimating] = useState(false)
   const [direction, setDirection] = useState('left')
+  const [containerHeight, setContainerHeight] = useState('70vh') // 👈 default reduced
   const timerRef = useRef(null)
+  const containerRef = useRef(null)
 
   const images = [
     {
@@ -136,6 +317,37 @@ const HeroSection = memo(() => {
       alt: 'Sports Stadium 3'
     }
   ]
+
+  const getImageSrcForScreen = (image) => {
+    if (typeof window === 'undefined') return image.desktop
+    const w = window.innerWidth
+    if (w >= 1280) return image.desktop
+    if (w >= 1024) return image.laptop
+    if (w >= 768) return image.tablet
+    return image.mobile
+  }
+
+  useEffect(() => {
+    const updateHeight = () => {
+      const src = getImageSrcForScreen(images[currentImageIndex])
+      const img = new Image()
+      img.onload = () => {
+        const aspectRatio = img.naturalHeight / img.naturalWidth
+        const containerWidth = window.innerWidth
+
+        // 👇 MAIN CHANGE: height reduce factor
+        const scaleFactor = 0.7   // 🔥 change this (0.6–0.8 best)
+        const calculatedHeight = containerWidth * aspectRatio * scaleFactor
+
+        setContainerHeight(`${calculatedHeight}px`)
+      }
+      img.src = src
+    }
+
+    updateHeight()
+    window.addEventListener('resize', updateHeight)
+    return () => window.removeEventListener('resize', updateHeight)
+  }, [currentImageIndex])
 
   const goToIndex = (newIndex, dir = 'left') => {
     if (animating || newIndex === currentImageIndex) return
@@ -167,25 +379,24 @@ const HeroSection = memo(() => {
 
   const ImageSlide = ({ image, className = '' }) => (
     <div className={`absolute inset-0 w-full h-full ${className}`}>
-      <picture className="absolute inset-0 w-full h-full" style={{ display: 'block' }}>
-        <source media="(min-width: 1280px)" srcSet={image.desktop} />
-        <source media="(min-width: 1024px) and (max-width: 1279px)" srcSet={image.laptop} />
-        <source media="(min-width: 768px) and (max-width: 1023px)" srcSet={image.tablet} />
-        <source media="(max-width: 767px)" srcSet={image.mobile} />
-        <img
-          src={image.desktop}
-          alt={image.alt}
-          className="w-full h-full object-cover object-bottom"
-          style={{ display: 'block' }}
-        />
-      </picture>
+      <img
+        src={getImageSrcForScreen(image)}
+        alt={image.alt}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'block',
+          objectFit: 'fill' // 👈 no crop, stretch allowed
+        }}
+      />
     </div>
   )
 
   return (
     <div
-      className="relative text-white overflow-hidden"
-      style={{ height: 'clamp(420px, 75vh, 780px)' }}
+      ref={containerRef}
+      className="relative text-white overflow-hidden w-full"
+      style={{ height: containerHeight }}
     >
       <style>{`
         @keyframes slideCurrentOut {
@@ -218,7 +429,6 @@ const HeroSection = memo(() => {
         }
       `}</style>
 
-      {/* Current image — slides out */}
       <ImageSlide
         image={images[currentImageIndex]}
         className={
@@ -230,7 +440,6 @@ const HeroSection = memo(() => {
         }
       />
 
-      {/* Next image — slides in */}
       {animating && nextImageIndex !== null && (
         <ImageSlide
           image={images[nextImageIndex]}
@@ -238,20 +447,16 @@ const HeroSection = memo(() => {
         />
       )}
 
-      {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/30 z-10" />
 
-      {/* LiveTicker */}
       <div className="relative z-20">
         <LiveTicker />
       </div>
 
-      {/* Category */}
       <div className="relative z-20">
         <Category />
       </div>
 
-      {/* Carousel dots */}
       <div className="absolute bottom-6 left-0 right-0 z-30 flex justify-center gap-2">
         {images.map((_, index) => (
           <button
@@ -269,11 +474,6 @@ const HeroSection = memo(() => {
           />
         ))}
       </div>
-
-      {/* Headline */}
-      {/* <div className="absolute bottom-0 left-0 right-0 z-30">
-        <Headline />
-      </div> */}
     </div>
   )
 })

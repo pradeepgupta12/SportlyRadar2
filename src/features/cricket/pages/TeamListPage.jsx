@@ -1306,7 +1306,7 @@ const TeamListPage = () => {
                     <>
                       <div className="flex items-center justify-between mb-3 px-1">
                         <div>
-                          <h2 className="font-bold text-gray-900 dark:text-white text-base">{selectedTeam}</h2>
+                          <h2 className="font-bold text-gray-900 dark:text-white text-xl sm:text-2xl md:text-3xl">{selectedTeam}</h2>
                           <p className="text-xs text-gray-500 dark:text-gray-400">{players.length} players</p>
                         </div>
                       </div>
